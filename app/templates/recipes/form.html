@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ form_title }} - 食譜管理系統{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">{{ form_title }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">食譜名稱 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="title" name="title" value="{{ recipe.title if recipe else '' }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">簡介</label>
+                        <textarea class="form-control" id="description" name="description" rows="2">{{ recipe.description if recipe else '' }}</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="image_url" class="form-label">圖片網址</label>
+                        <input type="url" class="form-control" id="image_url" name="image_url" value="{{ recipe.image_url if recipe else '' }}">
+                    </div>
+
+                    <hr>
+                    <h5>食材清單</h5>
+                    <div id="ingredient-container">
+                        {% if recipe and recipe.ingredients %}
+                            {% for ing in recipe.ingredients %}
+                            <div class="row mb-2 ingredient-row">
+                                <div class="col-6">
+                                    <input type="text" class="form-control" name="ingredient_name[]" value="{{ ing.name }}" placeholder="食材名稱 (如：雞蛋)">
+                                </div>
+                                <div class="col-4">
+                                    <input type="text" class="form-control" name="ingredient_qty[]" value="{{ ing.quantity }}" placeholder="份量 (如：2顆)">
+                                </div>
+                                <div class="col-2">
+                                    <button type="button" class="btn btn-danger w-100 remove-ing">移除</button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="row mb-2 ingredient-row">
+                                <div class="col-6">
+                                    <input type="text" class="form-control" name="ingredient_name[]" placeholder="食材名稱 (如：雞蛋)">
+                                </div>
+                                <div class="col-4">
+                                    <input type="text" class="form-control" name="ingredient_qty[]" placeholder="份量 (如：2顆)">
+                                </div>
+                                <div class="col-2">
+                                    <button type="button" class="btn btn-danger w-100 remove-ing">移除</button>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-success mb-3" id="add-ing"> + 新增食材</button>
+
+                    <hr>
+                    <h5>烹飪步驟 <span class="text-danger">*</span></h5>
+                    <div class="mb-3">
+                        <textarea class="form-control" id="steps" name="steps" rows="6" required placeholder="請輸入烹飪步驟...">{{ recipe.steps if recipe else '' }}</textarea>
+                    </div>
+
+                    <hr>
+                    <h5>標籤</h5>
+                    <div class="mb-4">
+                        {% set recipe_tag_ids = [] %}
+                        {% if recipe and recipe.tags %}
+                            {% for t in recipe.tags %}
+                                {% set _ = recipe_tag_ids.append(t.id) %}
+                            {% endfor %}
+                        {% endif %}
+                        
+                        {% for tag in tags %}
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="tag_{{ tag.id }}" name="tag_ids[]" value="{{ tag.id }}" 
+                                {% if tag.id in recipe_tag_ids %}checked{% endif %}>
+                            <label class="form-check-label" for="tag_{{ tag.id }}">{{ tag.name }}</label>
+                        </div>
+                        {% else %}
+                        <p class="text-muted small">目前沒有可用的標籤。</p>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('recipe.index') }}" class="btn btn-secondary">取消</a>
+                        <button type="submit" class="btn btn-primary">儲存食譜</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('ingredient-container');
+    const addBtn = document.getElementById('add-ing');
+
+    addBtn.addEventListener('click', function() {
+        const row = document.createElement('div');
+        row.className = 'row mb-2 ingredient-row';
+        row.innerHTML = `
+            <div class="col-6">
+                <input type="text" class="form-control" name="ingredient_name[]" placeholder="食材名稱 (如：雞蛋)">
+            </div>
+            <div class="col-4">
+                <input type="text" class="form-control" name="ingredient_qty[]" placeholder="份量 (如：2顆)">
+            </div>
+            <div class="col-2">
+                <button type="button" class="btn btn-danger w-100 remove-ing">移除</button>
+            </div>
+        `;
+        container.appendChild(row);
+    });
+
+    container.addEventListener('click', function(e) {
+        if(e.target && e.target.classList.contains('remove-ing')) {
+            e.target.closest('.ingredient-row').remove();
+        }
+    });
+});
+</script>
+{% endblock %}

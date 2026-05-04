@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}首頁 - 食譜管理系統{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>所有食譜</h2>
+    <a href="{{ url_for('recipe.new') }}" class="btn btn-primary">新增食譜</a>
+</div>
+
+<div class="card mb-4 bg-light">
+    <div class="card-body py-2">
+        <form class="row row-cols-lg-auto g-3 align-items-center" action="{{ url_for('recipe.index') }}" method="GET">
+            <div class="col-12">
+                <label class="visually-hidden" for="ingredients">用食材搜尋</label>
+                <div class="input-group">
+                    <div class="input-group-text">用食材搜尋</div>
+                    <input type="text" class="form-control" id="ingredients" name="ingredients" placeholder="例如：雞蛋, 番茄" value="{{ request.args.get('ingredients', '') }}">
+                </div>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-secondary">推薦食譜</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if keyword or ingredients %}
+    <div class="alert alert-info">
+        搜尋結果：
+        {% if keyword %} 關鍵字「{{ keyword }}」 {% endif %}
+        {% if ingredients %} 食材包含「{{ ingredients }}」 {% endif %}
+        <a href="{{ url_for('recipe.index') }}" class="btn btn-sm btn-outline-secondary ms-2">清除搜尋</a>
+    </div>
+{% endif %}
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for recipe in recipes %}
+    <div class="col">
+        <div class="card h-100 recipe-card shadow-sm">
+            {% if recipe.image_url %}
+            <img src="{{ recipe.image_url }}" class="card-img-top" alt="{{ recipe.title }}" style="height: 200px; object-fit: cover;">
+            {% else %}
+            <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
+                <span>無圖片</span>
+            </div>
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ recipe.title }}</h5>
+                <p class="card-text text-truncate">{{ recipe.description or '無簡介' }}</p>
+                {% if recipe.match_count %}
+                <p class="text-success small">符合 {{ recipe.match_count }} 項搜尋食材</p>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-white border-top-0 d-flex justify-content-between">
+                <a href="{{ url_for('recipe.detail', recipe_id=recipe.id) }}" class="btn btn-sm btn-outline-primary">檢視詳情</a>
+                <span class="text-muted small">{{ recipe.created_at[:10] }}</span>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-warning text-center">目前沒有食譜或找不到符合的結果。</div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
